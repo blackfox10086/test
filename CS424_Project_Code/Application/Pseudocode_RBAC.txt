@@ -1,0 +1,45 @@
+ROLES = ["donor", "staff", "manager"]
+PERMISSIONS = {
+  donor: {
+    donation: "allowed"},
+  staff: {
+    view_donor_profiles: "individual_donor",
+    view_donations: "individual_donor"},
+  manager: {
+    view_donor_profiles: "all",  // individual_donor , Company_donor , Organisation donor
+    view_donations: "all"        // individual_donor , Company_donor , Organisation donor }
+}
+
+// Check user is valid and has a known role.
+
+FUNCTION authenticate(user)
+  IF user == null OR user.role not in ROLES
+    RETURN false
+  RETURN true
+
+// RBAC permission check that uses the user’s role, the action, and the scope (own_only / individual_donor / all) to decide if this user is allowed to access.
+
+FUNCTION hasPermission(user, action, resource)
+  IF authenticate(user) == false
+    RETURN false
+
+  rolePermissions = PERMISSIONS[user.role]
+
+  IF action not in Role_Permissions
+    RETURN false
+
+  scope = Role_Permissions[action]
+
+  IF scope == "allowed"
+    RETURN true
+
+  IF scope == "individual_donor" AND
+     resource.donorId in user.assignedDonorIds AND
+     isIndividualDonor(resource) == true
+    RETURN true
+
+  IF scope == "all"
+    RETURN true
+
+  ELSE
+    RETURN false
