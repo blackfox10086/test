@@ -1,0 +1,76 @@
+pipeline {
+    agent any
+    tools {
+        nodejs 'Node25.9'  // 若有 Node 工具，否則移除
+    }
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+                echo '從 GitHub 拉取代碼完成'
+            }
+        }
+        stage('SAST - OWASP Dependency-Check') {
+            steps {
+                dependencyCheckAnalyzer datadir: 'dependency-check-data',
+                                        hintsFile: '',
+                                        isFailOnWarnings: false,
+                                        metrics: true,
+                                        monoclePipelines: false,
+                                        nocheckBootstrap: false,
+                                        skipOnScmChange: false,
+                                        suppressionFile: '',
+                                        zipExtensions: ''
+                dependencyCheckPublisher pattern: 'dependency-check-report.html',
+                                         failedThreshold: '0',
+                                         criticalThreshold: '0'
+            }
+            post {
+                always {
+                    publishHTML([allowMissing: false,
+                                 alwaysLinkToLastBuild: true,
+                                 keepAll: true,
+                                 reportDir: 'dependency-check-report.html',
+                                 reportFiles: 'index.html',
+                                 reportName: 'Dependency-Check Report'])
+                }
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    sh '''
+                    docker build -t myapp:latest .
+                    '''
+                }
+            }
+        }
+        stage('Deploy to Port 3000') {
+            steps {
+                script {
+                    sh '''
+                    docker stop myapp || true
+                    docker rm myapp || true
+                    docker run -d --name myapp -p 3000:3000 myapp:latest
+                    sleep 10  # 等待應用啟動
+                    '''
+                }
+            }
+        }
+        stage('DAST - OWASP ZAP') {
+            steps {
+                zap baseline: true,
+                    target: 'http://localhost:3000',
+                    rules: [[name: 'HIGH', threshold: 0.0]],
+                    cli: 'zap-cli'
+            }
+        }
+    }
+    post {
+        always {
+            zapArchive()
+            archiveArtifacts artifacts: '*/.html, */.xml, */.json', allowEmptyArchive: true
+            sh 'docker stop myapp || true && docker rm myapp || true'
+        }
+    }
+}
