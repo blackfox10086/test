@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- CSP restricts all scripts and styles
+    to this origin only. This significantly limits what injected XSS
+    payloads can load or execute, even if HTML injection occurs. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self';">
+
+    <title>Oxfam Hong Kong Donation Records</title>
+    <link rel="stylesheet" href="style_S.css">
+    <script src="login.js" defer></script>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="panel">
+
+            <section id="loginSection" class="card">
+                <div class="card-head">
+                    <div class="badge">Oxfam Hong Kong</div>
+                    <h1>Login</h1>
+                    <p>Please sign in to continue.</p>
+                </div>
+
+                <form id="loginForm">
+                    <label for="loginPassword">Email</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your email" autocomplete="email" required>
+
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password"
+                        autocomplete="current-password" required>
+
+                    <button type="submit">Login</button>
+                    <!-- loginMessage is a dynamic text area; JS must use textContent here -->
+                    <div id="loginMessage" class="message" aria-live="polite"></div>
+                </form>
+            </section>
+
+            <section id="recordSection" class="card hidden record-card">
+                <button type="button" id="logoutBtn" class="logout-btn">Logout</button>
+
+                <div class="card-head">
+                    <div class="badge">Oxfam Hong Kong</div>
+                    <h2>Donation Records</h2>
+                </div>
+
+                <!-- recordMessage is also dynamic text; JS must use textContent here -->
+                <div id="recordMessage" class="message" aria-live="polite"></div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Type</th>
+                                <th>Donor Name</th>
+                                <th>Amount (HKD)</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <!-- Dynamic rows go into this tbody; JS will build them with textContent -->
+                        <tbody id="recordTableBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+        </div>
+    </div>
+</body>
+
+</html>
